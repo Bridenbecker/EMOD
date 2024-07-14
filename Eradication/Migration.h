@@ -177,8 +177,8 @@ namespace Kernel
         virtual const std::vector<MigrationType::Enum>& GetMigrationTypes( Gender::Enum gender ) const override;
 
         std::vector<std::vector<MigrationRateData>> m_RateData;
-        std::vector<suids::suid>         m_ReachableNodesFemale;
-        std::vector<MigrationType::Enum> m_MigrationTypesFemale;
+        std::vector<suids::suid>                    m_ReachableNodesFemale;
+        std::vector<MigrationType::Enum>            m_MigrationTypesFemale;
     };
 
     // ----------------------
@@ -203,6 +203,7 @@ namespace Kernel
         virtual ~MigrationInfoFile();
 
         virtual void Initialize( const std::string& idreference );
+        virtual bool IsInitialized() const;
 
         virtual void SetEnableParameterName( const std::string& rName );
         virtual void SetFilenameParameterName( const std::string& rName );
@@ -229,6 +230,7 @@ namespace Kernel
         uint32_t                m_GenderDataSize;
         uint32_t                m_AgeDataSize;
         std::ifstream           m_FileStream;
+        bool                    m_IsInitialized;
 
         std::unordered_map< ExternalNodeId_t, uint32_t > m_Offsets;
     };
@@ -261,13 +263,14 @@ namespace Kernel
 
         virtual IMigrationInfo* CreateMigrationInfo( INodeContext *parent_node, 
                                                      const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap ) override;
-    protected:
-        virtual void CreateInfoFileList();
-        virtual void InitializeInfoFileList( const Configuration* config );
+
         static std::vector<std::vector<MigrationRateData>> GetRateData( INodeContext *parent_node, 
                                                                         const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap,
                                                                         std::vector<MigrationInfoFile*>& infoFileList,
                                                                         bool* pIsFixedRate );
+    protected:
+        virtual void CreateInfoFileList();
+        virtual void InitializeInfoFileList( const Configuration* config );
 
         std::vector<MigrationInfoFile*> m_InfoFileList ;
         bool m_IsHeterogeneityEnabled;
@@ -301,10 +304,12 @@ namespace Kernel
                                                      const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap ) override;
         virtual bool IsAtLeastOneTypeConfiguredForIndividuals() const override;
         virtual bool IsEnabled( MigrationType::Enum mt ) const override;
+
+        static std::vector<std::vector<MigrationRateData>> GetRateData( INodeContext *parent_node, 
+                                                                        const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap,
+                                                                        int torus_size,
+                                                                        float modifier );
     protected:
-        std::vector<std::vector<MigrationRateData>> GetRateData( INodeContext *parent_node, 
-                                                                 const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap,
-                                                                 float modifier );
 
         bool  m_IsHeterogeneityEnabled;
         float m_xLocalModifier;

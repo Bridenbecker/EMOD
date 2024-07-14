@@ -57,14 +57,23 @@ namespace Kernel
         virtual bool IsEnabled( MigrationType::Enum mt ) const = 0;
     };
 
+#ifndef DISABLE_VECTOR
+    struct IMigrationInfoFactoryVector;
+#endif
+
     namespace MigrationFactory
     {
         // Contructs and initializes the proper factory based on the initialization parameters
-        IMigrationInfoFactory IDMAPI * ConstructMigrationInfoFactory( const ::Configuration *config, 
-                                                                      const std::string& idreference,
-                                                                      SimType::Enum sim_type,
-                                                                      MigrationStructure::Enum ms,
-                                                                      bool useDefaultMigration,
-                                                                      int defaultTorusSize=10 );
+        IMigrationInfoFactory* ConstructMigrationInfoFactory( const ::Configuration *config, 
+                                                              const std::string& idreference,
+                                                              SimType::Enum sim_type,
+                                                              MigrationStructure::Enum ms,
+                                                              bool useDefaultMigration,
+                                                              int defaultTorusSize=10 );
+
+#ifndef DISABLE_VECTOR
+        IMigrationInfoFactoryVector* ConstructMigrationInfoFactoryVector( JsonConfigurable* pParent, 
+                                                                          const ::Configuration *config );
+#endif
     }
 }

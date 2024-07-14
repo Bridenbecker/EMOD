@@ -6,6 +6,7 @@
 #include "Exceptions.h"
 #include "Log.h"
 #include "INodeContext.h"
+#include "ISimulationContext.h"
 #include "Climate.h"
 #include "SimulationConfig.h"
 #include "TransmissionGroupMembership.h"
@@ -102,6 +103,7 @@ namespace Kernel
         , m_ImmigratingInfectious()
         , m_ImmigratingInfected()
         , m_ImmigratingAdult()
+        , m_pMigrationInfoVector(nullptr)
     {
         if( m_MortalityTable.size() == 0 )
         {
@@ -2670,10 +2672,27 @@ namespace Kernel
         return selected_indexes;
     }
 
-    void VectorPopulation::Vector_Migration( float dt, IMigrationInfo* pMigInfo, VectorCohortVector_t* pMigratingQueue)
+    void VectorPopulation::SetupMigration( const std::string& idreference, 
+                                           const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap )
     {
-        release_assert( pMigInfo );
+        m_pMigrationInfoVector = m_species_params->p_migration_factory->CreateMigrationInfoVector( idreference, m_context, rNodeIdSuidMap );
+    }
+
+    void VectorPopulation::Vector_Migration( float dt, VectorCohortVector_t* pMigratingQueue )
+    {
+        release_assert( m_pMigrationInfoVector );
         release_assert( pMigratingQueue );
+
+        IVectorSimulationContext* p_vsc = nullptr;
+        if (s_OK !=  m_context->GetParent()->QueryInterface(GET_IID(IVectorSimulationContext), (void**)&p_vsc) )
+        {
+            throw QueryInterfaceException( __FILE__, __LINE__, __FUNCTION__, "m_context", "IVectorSimulationContext", "ISimulationContext" );
+        }
+
+        // ??????????????????????
+        // ??? CalculateRates ???
+        // ??????????????????????
+        m_pMigrationInfoVector->UpdateRates( this->GetSuid(), get_SpeciesID(), p_vsc );
 
         // -------------------------------------------------------------------
         // --- NOTE: r_cdf is a probability cumulative distribution function.
@@ -2682,10 +2701,10 @@ namespace Kernel
         // --- The rates are converted to probabilities when calcualting the CDF.
         // --- Here we convert them back to rates.
         // -------------------------------------------------------------------
-        float                                   total_rate        = pMigInfo->GetTotalRate();
-        const std::vector<float              >& r_cdf             = pMigInfo->GetCumulativeDistributionFunction();
-        const std::vector<suids::suid        >& r_reachable_nodes = pMigInfo->GetReachableNodes();
-        const std::vector<MigrationType::Enum>& r_migration_types = pMigInfo->GetMigrationTypes();
+        float                                   total_rate        = m_pMigrationInfoVector->GetTotalRate();
+        const std::vector<float              >& r_cdf             = m_pMigrationInfoVector->GetCumulativeDistributionFunction();
+        const std::vector<suids::suid        >& r_reachable_nodes = m_pMigrationInfoVector->GetReachableNodes();
+        const std::vector<MigrationType::Enum>& r_migration_types = m_pMigrationInfoVector->GetMigrationTypes();
 
         if( (r_cdf.size() == 0) || (total_rate == 0.0) )
         {
@@ -3236,6 +3255,11 @@ namespace Kernel
         for ( auto cohort : LarvaQueues )
         {
             cohort->SetHabitat( ivnc->GetVectorHabitatBySpeciesAndType( m_species_params->name, cohort->GetHabitatType(), nullptr ) );
+        }
+
+        if( m_pMigrationInfoVector != nullptr )
+        {
+            m_pMigrationInfoVector->SetContextTo( context );
         }
     }
 

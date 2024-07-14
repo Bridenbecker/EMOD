@@ -7,6 +7,7 @@
 #include "IContagionPopulation.h"
 #include "StrainIdentity.h"
 #include "INodeContext.h"
+#include "ISimulationContext.h"
 #include "Climate.h"
 #include "Exceptions.h"
 #include "Log.h"
@@ -819,11 +820,21 @@ namespace Kernel
     }
 
     void VectorPopulationIndividual::Vector_Migration( float dt,
-                                                       IMigrationInfo* pMigInfo,
                                                        VectorCohortVector_t* pMigratingQueue )
     {
-        release_assert(pMigInfo);
+        release_assert(m_pMigrationInfoVector);
         release_assert(pMigratingQueue);
+
+        IVectorSimulationContext* p_vsc = nullptr;
+        if (s_OK !=  m_context->GetParent()->QueryInterface(GET_IID(IVectorSimulationContext), (void**)&p_vsc) )
+        {
+            throw QueryInterfaceException( __FILE__, __LINE__, __FUNCTION__, "m_context->GetParent()", "IVectorSimulationContext", "ISimulationContext" );
+        }
+
+        // ??????????????????????
+        // ??? CalculateRates ???
+        // ??????????????????????
+        m_pMigrationInfoVector->UpdateRates( m_context->GetSuid(), get_SpeciesID(), p_vsc );
 
         // Use the verbose "for" construct here because we may be modifying the list and need to protect the iterator.
         for( auto it = pAdultQueues->begin(); it != pAdultQueues->end(); ++it )
@@ -833,7 +844,7 @@ namespace Kernel
             suids::suid destination = suids::nil_suid();
             MigrationType::Enum mig_type = MigrationType::NO_MIGRATION;
             float time = 0.0;
-            pMigInfo->PickMigrationStep( m_context->GetRng(), nullptr, 1.0, destination, mig_type, time );
+            m_pMigrationInfoVector->PickMigrationStep( m_context->GetRng(), nullptr, 1.0, destination, mig_type, time );
 
             // test if each vector will migrate this time step
             if (!destination.is_nil() && (time <= dt))

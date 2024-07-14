@@ -27,7 +27,7 @@ namespace Kernel
 {
     class VectorSpeciesParameters;
     struct VectorParameters;
-    struct IMigrationInfo;
+    struct IMigrationInfoVector;
 
     class IndividualHumanVector;
     class VectorCohortWithHabitat;
@@ -55,7 +55,9 @@ namespace Kernel
         virtual void UpdateVectorPopulation(float dt) override;
 
         // For NodeVector to calculate # of migrating vectors (processEmigratingVectors) and put them in new node (processImmigratingVector)
-        virtual void Vector_Migration( float dt, IMigrationInfo* pMigInfo, VectorCohortVector_t* pMigratingQueue ) override;
+        virtual void SetupMigration( const std::string& idreference, 
+                                     const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap ) override;
+        virtual void Vector_Migration( float dt, VectorCohortVector_t* pMigratingQueue ) override;
         virtual void AddImmigratingVector( IVectorCohort* pvc ) override;
         virtual void SetSortingVectors() override;
         virtual void SortImmigratingVectors() override;
@@ -575,11 +577,11 @@ namespace Kernel
         VectorCohortVector_t m_ReleasedAdults;
         VectorCohortVector_t m_ReleasedMales;
 
-        INodeContext                    *m_context;
-        INodeVector                     *m_pNodeVector;
-        const VectorParameters          *m_vector_params;
-        const VectorSpeciesParameters   *m_species_params;
-        VectorProbabilities             *m_probabilities;
+        INodeContext            *m_context;
+        INodeVector             *m_pNodeVector;
+        VectorParameters        *m_vector_params;
+        VectorSpeciesParameters *m_species_params;
+        VectorProbabilities     *m_probabilities;
 
         bool m_VectorMortality;
 
@@ -597,6 +599,7 @@ namespace Kernel
         std::vector<IVectorCohort*> m_ImmigratingInfectious;
         std::vector<IVectorCohort*> m_ImmigratingInfected;
         std::vector<IVectorCohort*> m_ImmigratingAdult;
+        IMigrationInfoVector*       m_pMigrationInfoVector;
 
         static std::vector<float> m_MortalityTable;
 
