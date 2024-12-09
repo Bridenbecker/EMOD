@@ -7,44 +7,47 @@
 #include "EnumSupport.h"
 #include "VectorEnums.h"
 #include "SimulationEnums.h"
+#include "GeneticProbability.h"
 
 namespace Kernel
 {
     struct IVectorSimulationContext;
+    class VectorGeneCollection;
 
     ENUM_DEFINE(ModifierEquationType,
         ENUM_VALUE_SPEC(LINEAR       , 1)
         ENUM_VALUE_SPEC(EXPONENTIAL  , 2))
 
-     // ---------------------------
-     // --- MigrationInfoFileVector
-     // ---------------------------
-
-     // MigrationInfoFileVector is responsible for reading the vector-specific migration data from files.
-     // This object assumes that for one file name there is one binary file containing the
-     // "to-node" and rate data while json-formatted metadata file contains extra information
-     // about the data in the binary file. The factory uses this object to create
-     // the IMigrationInfo objects.
-        class MigrationInfoFileVector : public MigrationInfoFile
+    // ---------------------------
+    // --- MigrationInfoFileVector
+    // ---------------------------
+    // Need to extend MigrationMetadata to add the ability for allele combinations
+    // i.e. migration by genome
+    class MigrationMetadataVector : public MigrationMetadata
     {
     public:
-        MigrationInfoFileVector( MigrationType::Enum migType,
+        MigrationMetadataVector( int speciesIndex,
+                                 const VectorGeneCollection* pGenes,
+                                 MigrationType::Enum expectedMigType, 
                                  int defaultDestinationsPerNode );
-        virtual ~MigrationInfoFileVector();
+        virtual ~MigrationMetadataVector();
 
-        const std::vector<std::pair<AlleleCombo, int>>& GetAlleleComboMapList() { return m_allele_combos_index_map_list; }
-        void SetSpeciesParameters( const VectorSpeciesParameters* pSpeciesParameters ){ m_pSpeciesParameters = pSpeciesParameters; }
+        IMPLEMENT_NO_REFERENCE_COUNTING()
+        DECLARE_QUERY_INTERFACE()
 
+        virtual bool Configure( const Configuration* config ) override;
+
+        const std::vector<std::pair<AlleleCombo, int>>& GetAlleleComboMapList() { return m_AlleleCombosIndexMapList; }
 
     protected:
-        // Returns the expected size of the binary file
-        virtual uint32_t ParseMetadataForFile( const std::string& data_filepath, const std::string& idreference);
+        virtual void CheckGenderDataType( const Configuration* config ) override { /* don't need to check it */ };
 
         static bool AlleleComboIntCompare( const std::pair<AlleleCombo, int>& rLeft, const std::pair<AlleleCombo, int>& rRight );
-        std::vector<std::pair<AlleleCombo, int>> m_allele_combos_index_map_list;
-        const VectorSpeciesParameters* m_pSpeciesParameters;
-    };
 
+        int m_SpeciesIndex;
+        const VectorGeneCollection* m_pGenes;
+        std::vector<std::pair<AlleleCombo, int>> m_AlleleCombosIndexMapList;
+    };
 
     // ----------------------------------
     // --- MigrationInfoNullVector
@@ -53,7 +56,7 @@ namespace Kernel
     {
     public:
         IMPLEMENT_NO_REFERENCE_COUNTING()
-            DECLARE_QUERY_INTERFACE()
+        DECLARE_QUERY_INTERFACE()
 
     public:
         //IMigrationInfoVector
@@ -61,21 +64,20 @@ namespace Kernel
                                   const std::string& rSpeciesID,
                                   IVectorSimulationContext* pivsc ) {};
 
-        virtual Gender::Enum             ConvertVectorGender( VectorGender::Enum vector_gender ) const
+        virtual Gender::Enum ConvertVectorGender( VectorGender::Enum vector_gender ) const
         {
             return ( vector_gender == VectorGender::VECTOR_FEMALE ? Gender::FEMALE : Gender::MALE );
         };
+
         virtual const std::vector<float>& GetFractionTraveling( VectorGender::Enum vector_gender, int by_genome_index ) 
         {  
             static std::vector<float> fraction_traveling;
             return fraction_traveling;
         };
+
         virtual bool                     CanTravel() { return false; }
         virtual bool                     TravelByAlleles() { return false; }
         virtual int                      GetMigrationDataIndex( int species_index, VectorGenome& rGenome ) { return 0; }
-
-
-
 
     protected:
         friend class MigrationInfoFactoryVector;
@@ -121,7 +123,8 @@ namespace Kernel
                                          ModifierEquationType::Enum equation,
                                          float habitatModifier,
                                          float foodModifier,
-                                         float stayPutModifier );
+                                         float stayPutModifier,
+                                         const std::vector<std::pair<AlleleCombo, int>>& rAlleleComboIndexList );
 
         virtual void Initialize( const std::vector<std::vector<MigrationRateData>>& rRateData ) override;
         virtual void SaveRawRates( std::vector<float>& r_rate_cdf, Gender::Enum gender )  override;
@@ -143,12 +146,14 @@ namespace Kernel
 
     private:
         std::vector<std::pair<AlleleCombo, int>> m_allele_combos_index_map_list;
+
         std::vector<std::vector<float>> m_RawMigrationRateFemaleByIndex;
         std::vector<std::vector<float>> m_FractionTravelingMaleByIndex;
         std::vector<std::vector<float>> m_FractionTravelingFemaleByIndex;
         std::vector<float>              m_TotalRateFemaleByIndex;
         std::vector<float>              m_TotalRateMaleByIndex;
         std::vector<std::vector<float>> m_RateCDFFemaleByIndex;
+
         float                       m_TotalRateFemale;
         std::vector<float>          m_RateCDFFemale;
         suids::suid                 m_ThisNodeId;
@@ -167,22 +172,26 @@ namespace Kernel
     class MigrationInfoFactoryVector : public IMigrationInfoFactoryVector
     {
     public:
-        MigrationInfoFactoryVector( bool enableVectorMigration );
+        MigrationInfoFactoryVector();
         virtual ~MigrationInfoFactoryVector();
 
         // IMigrationInfoFactoryVector
         virtual void                  ReadConfiguration( JsonConfigurable* pParent, const ::Configuration* config ) override;
         virtual IMigrationInfoVector* CreateMigrationInfoVector( const std::string& idreference,
-                                                                 INodeContext *parent_node, 
+                                                                 INodeContext *pParentNode, 
                                                                  const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap,
-                                                                 const VectorSpeciesParameters* m_species_params ) override;
+                                                                 int speciesIndex,
+                                                                 const VectorGeneCollection* pGenes ) override;
 
     private:
-        MigrationInfoFileVector    m_InfoFileVector;
-        ModifierEquationType::Enum m_ModifierEquation;
-        float                      m_ModifierHabitat;
-        float                      m_ModifierFood;
-        float                      m_ModifierStayPut;
+        MigrationMetadataVector*    m_pMetaData;
+        MigrationInfoFile*          m_pInfoFile;
+        ModifierEquationType::Enum  m_ModifierEquation;
+        float                       m_ModifierHabitat;
+        float                       m_ModifierFood;
+        float                       m_ModifierStayPut;
+        std::string                 m_Filename ;
+        float                       m_xModifier ;
     };
 
     // ----------------------------------
@@ -198,9 +207,10 @@ namespace Kernel
         // IMigrationInfoFactoryVector
         virtual void                  ReadConfiguration( JsonConfigurable* pParent, const ::Configuration* config ) {};
         virtual IMigrationInfoVector* CreateMigrationInfoVector( const std::string& idreference,
-                                                                 INodeContext *parent_node, 
+                                                                 INodeContext *pParentNode, 
                                                                  const boost::bimap<ExternalNodeId_t, suids::suid>& rNodeIdSuidMap,
-                                                                 const VectorSpeciesParameters* m_species_params ) override;
+                                                                 int speciesIndex,
+                                                                 const VectorGeneCollection* pGenes ) override;
 
     protected: 
 
