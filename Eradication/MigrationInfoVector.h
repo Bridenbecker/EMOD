@@ -64,20 +64,17 @@ namespace Kernel
                                   const std::string& rSpeciesID,
                                   IVectorSimulationContext* pivsc ) {};
 
-        virtual Gender::Enum ConvertVectorGender( VectorGender::Enum vector_gender ) const
+        virtual Gender::Enum              ConvertVectorGender( VectorGender::Enum vector_gender ) const
         {
             return ( vector_gender == VectorGender::VECTOR_FEMALE ? Gender::FEMALE : Gender::MALE );
         };
-
-        virtual const std::vector<float>& GetFractionTraveling( VectorGender::Enum vector_gender, int by_genome_index ) 
+        const std::vector<float>*         GetFractionTraveling( const IVectorCohort* this_vector )
         {  
-            static std::vector<float> fraction_traveling;
-            return fraction_traveling;
+            return nullptr;
         };
+        virtual bool                      MightTravel( VectorGender::Enum vector_gender ) { return false; }
+        virtual bool                      IsMigrationByAlleles() { return false; }
 
-        virtual bool                     CanTravel() { return false; }
-        virtual bool                     TravelByAlleles() { return false; }
-        virtual int                      GetMigrationDataIndex( int species_index, VectorGenome& rGenome ) { return 0; }
 
     protected:
         friend class MigrationInfoFactoryVector;
@@ -109,11 +106,9 @@ namespace Kernel
         virtual float                     GetTotalRate( Gender::Enum gender = Gender::MALE ) const override;
         virtual const std::vector<float>& GetCumulativeDistributionFunction( Gender::Enum gender = Gender::MALE ) const override;
         const std::vector<suids::suid>&   GetReachableNodes( Gender::Enum gender = Gender::MALE ) const override;
-        const std::vector<float>&         GetFractionTraveling( VectorGender::Enum vector_gender, int by_genome_index ) override;
-        virtual bool                      CanTravel() { return true; }
-        bool                              TravelByAlleles() { return (m_allele_combos_index_map_list.size() > 0  ?  true: false); }
-        virtual int                       GetMigrationDataIndex( int species_index, VectorGenome& rGenome ) override;
-
+        std::vector<float>*               GetFractionTraveling( const IVectorCohort* this_vector ) override;
+        virtual bool                      MightTravel( VectorGender::Enum vector_gender ) override;
+        virtual bool                      IsMigrationByAlleles() override;
 
     protected:
         friend class MigrationInfoFactoryVector;
@@ -153,7 +148,6 @@ namespace Kernel
         std::vector<float>              m_TotalRateFemaleByIndex;
         std::vector<float>              m_TotalRateMaleByIndex;
         std::vector<std::vector<float>> m_RateCDFFemaleByIndex;
-
         float                       m_TotalRateFemale;
         std::vector<float>          m_RateCDFFemale;
         suids::suid                 m_ThisNodeId;
@@ -161,6 +155,8 @@ namespace Kernel
         float                       m_ModifierHabitat;
         float                       m_ModifierFood;
         float                       m_ModifierStayPut;
+        bool                        m_MigrationByAlleles;
+        bool                        m_DoingMigration;
     };
 
 
