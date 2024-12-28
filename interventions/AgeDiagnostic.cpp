@@ -23,8 +23,8 @@ namespace Kernel
     {
         // Don't nomrally like to put these in the constructor but
         // want to reduce the need of keeping pointers to the descriptions.
-        initConfigTypeMap( "Low",   &m_Low,   pLowDesc,  0.0f, 2000.0f, 0.0f );
-        initConfigTypeMap( "High",  &m_High,  pHighDesc, 0.0f, 2000.0f, 0.0f );
+        initConfigTypeMap( "Low",   &m_Low,   pLowDesc,  0.0f, 2000.0f,    0.0f );
+        initConfigTypeMap( "High",  &m_High,  pHighDesc, 0.0f, 2000.0f, 2000.0f );
         initConfigTypeMap( "Event", &m_Event, pEventDesc );
     }
 
