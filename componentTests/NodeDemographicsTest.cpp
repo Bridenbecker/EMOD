@@ -1180,12 +1180,9 @@ SUITE(NodeDemographicsTest)
     {
         std::string dist_str = "" ;
         dist_str += "{";
-        dist_str += "     \"NumDistributionAxes\": 0,";
-        dist_str += "     \"ResultUnits\": \"years\",";
         dist_str += "     \"ResultScaleFactor\": 365,";
-        dist_str += "     \"AxisScaleFactors\": 1,";
-        dist_str += "     \"ResultValues\"      : [    1,    2,   10,   20,   30,   40,   50,   60,   70,  80,  90 ],";
-        dist_str += "     \"DistributionValues\": [ 0.10, 0.20, 0.30, 0.40, 0.45, 0.55, 0.70, 0.75, 0.90,   1,   1 ] ";
+        dist_str += "     \"ResultValues\"      : [    1,    2,   10,   20,   30,   40,   50,   60,   70,  80 ],";
+        dist_str += "     \"DistributionValues\": [ 0.10, 0.20, 0.30, 0.40, 0.45, 0.55, 0.70, 0.75, 0.90,   1 ] ";
         dist_str += "}";
 
         JsonObjectDemog dist_json;
@@ -1208,6 +1205,10 @@ SUITE(NodeDemographicsTest)
         unique_ptr<NodeDemographics> p_nd( NodeDemographicsFactory::CreateNodeDemographics( dist_json, &string_table, &parent, 1, "AgeDistribution", "") );
 
         unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd ) );
+
+        // check what happens when you have a input values that are outside the values
+        CHECK_CLOSE(   1.0f * 365.0f, p_dist->DrawFromDistribution( 0.00f ), 0.000001);
+        CHECK_CLOSE(  80.0f * 365.0f, p_dist->DrawFromDistribution( 1.50f ), 0.000001);
 
         PSEUDO_DES rng( 42 );
 
@@ -1272,24 +1273,21 @@ SUITE(NodeDemographicsTest)
         std::string dist_str = "" ;
         dist_str += "{\n";
         dist_str += "     \"AxisNames\": [\"age\", \"year\"],\n";
-        dist_str += "     \"AxisUnits\": [\"years\", \"simulation_year\"],\n";
         dist_str += "     \"AxisScaleFactors\": [365, 1],\n";
-        dist_str += "     \"NumDistributionAxes\": 2,\n";
-        dist_str += "     \"ResultUnits\": \"annual births per 1000 individuals\",\n";
         dist_str += "     \"ResultScaleFactor\": 2.7397260273972604e-06,\n";
         dist_str += "     \"PopulationGroups\": [\n";
         dist_str += "           [15.0, 24.999, 25.0, 34.999, 35.0, 44.999, 45.0, 125.0],\n";
         dist_str += "           [2010.0, 2014.999, 2015.0, 2019.999, 2020.0, 2024.999, 2025.0, 2029.999, 2030.0, 2034.999, 2035.0, 2039.999]\n";
         dist_str += "      ],\n";
         dist_str += "     \"ResultValues\" : [\n";
-        dist_str += "           [103.3, 103.3,  77.5,  77.5,  65.5,  65.5,  55.5,  55.5,  47.3,  47.3,  40.5,  40.5], \n";
-        dist_str += "           [103.3, 103.3,  77.5,  77.5,  65.5,  65.5,  55.5,  55.5,  47.3,  47.3,  40.5,  40.5], \n";
-        dist_str += "           [265.0, 265.0, 278.7, 278.7, 275.4, 275.4, 271.0, 271.0, 265.7, 265.7, 260.0, 260.0], \n";
-        dist_str += "           [265.0, 265.0, 278.7, 278.7, 275.4, 275.4, 271.0, 271.0, 265.7, 265.7, 260.0, 260.0], \n";
-        dist_str += "           [152.4, 152.4, 129.2, 129.2, 115.9, 115.9, 104.4, 104.4,  94.5,  94.5,  86.0,  86.0], \n";
-        dist_str += "           [152.4, 152.4, 129.2, 129.2, 115.9, 115.9, 104.4, 104.4,  94.5,  94.5,  86.0,  86.0], \n";
-        dist_str += "           [ 19.9,  19.9,  14.6,  14.6,  12.1,  12.1,  10.1,  10.1,   8.5,   8.5 ,  7.1,   7.1], \n";
-        dist_str += "           [ 19.9,  19.9,  14.6,  14.6,  12.1,  12.1,  10.1,  10.1,   8.5,   8.5 ,  7.1,   7.1]  \n";
+        dist_str += "           [103.3,     103.3,   77.5,     77.5,   65.5,     65.5,   55.5,     55.5,   47.3,     47.3,   40.5,     40.5], \n";
+        dist_str += "           [103.3,     103.3,   77.5,     77.5,   65.5,     65.5,   55.5,     55.5,   47.3,     47.3,   40.5,     40.5], \n";
+        dist_str += "           [265.0,     265.0,  278.7,    278.7,  275.4,    275.4,  271.0,    271.0,  265.7,    265.7,  260.0,    260.0], \n";
+        dist_str += "           [265.0,     265.0,  278.7,    278.7,  275.4,    275.4,  271.0,    271.0,  265.7,    265.7,  260.0,    260.0], \n";
+        dist_str += "           [152.4,     152.4,  129.2,    129.2,  115.9,    115.9,  104.4,    104.4,   94.5,     94.5,   86.0,     86.0], \n";
+        dist_str += "           [152.4,     152.4,  129.2,    129.2,  115.9,    115.9,  104.4,    104.4,   94.5,     94.5,   86.0,     86.0], \n";
+        dist_str += "           [ 19.9,      19.9,   14.6,     14.6,   12.1,     12.1,   10.1,     10.1,    8.5,      8.5  ,  7.1,      7.1], \n";
+        dist_str += "           [ 19.9,      19.9,   14.6,     14.6,   12.1,     12.1,   10.1,     10.1,    8.5,      8.5  ,  7.1,      7.1]  \n";
         dist_str += "      ]\n";
         dist_str += "}\n";
         printf( "%s\n", dist_str.c_str() );
@@ -1314,6 +1312,13 @@ SUITE(NodeDemographicsTest)
         unique_ptr<NodeDemographics> p_nd( NodeDemographicsFactory::CreateNodeDemographics( dist_json, &string_table, &parent, 1, "AgeDistribution", "") );
 
         unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd, "age", "year" ) );
+
+        // check input values that are outside the range
+        CHECK_CLOSE( 103.3/365.0/1000.0, p_dist->DrawResultValue(  0.000 * 365.0, 1900.000 ), 0.000001);
+        CHECK_CLOSE( 103.3/365.0/1000.0, p_dist->DrawResultValue(  0.000 * 365.0, 2010.000 ), 0.000001);
+        CHECK_CLOSE(  55.5/365.0/1000.0, p_dist->DrawResultValue(  0.000 * 365.0, 2025.000 ), 0.000001);
+        CHECK_CLOSE(  40.5/365.0/1000.0, p_dist->DrawResultValue(  0.000 * 365.0, 2039.999 ), 0.000001);
+        CHECK_CLOSE(  40.5/365.0/1000.0, p_dist->DrawResultValue(  0.000 * 365.0, 2050.000 ), 0.000001);
 
         CHECK_CLOSE( 103.3/365.0/1000.0, p_dist->DrawResultValue( 15.000 * 365.0, 2010.000 ), 0.000001);
         CHECK_CLOSE( 103.3/365.0/1000.0, p_dist->DrawResultValue( 24.999 * 365.0, 2010.000 ), 0.000001);
@@ -1357,6 +1362,13 @@ SUITE(NodeDemographicsTest)
         CHECK_CLOSE(   7.1/365.0/1000.0, p_dist->DrawResultValue( 45.000 * 365.0, 2039.999 ), 0.000001);
         CHECK_CLOSE(   7.1/365.0/1000.0, p_dist->DrawResultValue( 70.000 * 365.0, 2037.500 ), 0.000001);
 
+        // check input values that are outside the range
+        CHECK_CLOSE(  19.9/365.0/1000.0, p_dist->DrawResultValue( 150.000 * 365.0, 1900.000 ), 0.000001);
+        CHECK_CLOSE(  19.9/365.0/1000.0, p_dist->DrawResultValue( 150.000 * 365.0, 2010.000 ), 0.000001);
+        CHECK_CLOSE(  10.1/365.0/1000.0, p_dist->DrawResultValue( 150.000 * 365.0, 2025.000 ), 0.000001);
+        CHECK_CLOSE(   7.1/365.0/1000.0, p_dist->DrawResultValue( 150.000 * 365.0, 2039.999 ), 0.000001);
+        CHECK_CLOSE(   7.1/365.0/1000.0, p_dist->DrawResultValue( 150.000 * 365.0, 2050.000 ), 0.000001);
+
         // ----------------------
         // --- Year outside range
         // ----------------------
@@ -1368,8 +1380,248 @@ SUITE(NodeDemographicsTest)
         CHECK_CLOSE(   7.1/365.0/1000.0, p_dist->DrawResultValue(130.000 * 365.0, 2037.500 ), 0.000001);
     }
 
+    TEST( TestMortalityDistribution )
+    {
+        std::string dist_str = "";
+        dist_str += "{\n";
+        dist_str += "     \"AxisNames\": [\"gender\", \"age\"],\n";
+        dist_str += "     \"AxisScaleFactors\": [1, 365],\n";
+        dist_str += "     \"ResultScaleFactor\": 2.7397260273972604e-06,\n";
+        //dist_str += "     \"ResultScaleFactor\": 1.0,\n";
+        dist_str += "     \"PopulationGroups\": [\n";
+        dist_str += "           [0, 1],\n";
+        dist_str += "           [    1,   5, 10, 20, 30, 40, 50, 60, 70, 100, 120]\n";
+        dist_str += "      ],\n";
+        dist_str += "     \"ResultValues\" : [\n";
+        dist_str += "           [ 60.2, 6.5, 1.5, 0.2, 1, 1.1, 4.8, 8.7, 12.6, 100, 1000], \n";
+        dist_str += "           [ 67.2, 7.5, 2.5, 1.2, 2, 2.1, 5.8, 9.7, 13.6, 100, 1000]  \n";
+        dist_str += "      ]\n";
+        dist_str += "}\n";
+        printf( "%s\n", dist_str.c_str() );
 
+        JsonObjectDemog dist_json;
+        dist_json.Parse( dist_str.c_str() );
 
+        std::map<std::string, std::string> string_table;
+        string_table[ "NumDistributionAxes" ] = "NumDistributionAxes";
+        string_table[ "AxisNames"           ] = "AxisNames";
+        string_table[ "AxisUnits"           ] = "AxisUnits";
+        string_table[ "AxisScaleFactors"    ] = "AxisScaleFactors";
+        string_table[ "NumPopulationGroups" ] = "NumPopulationGroups";
+        string_table[ "PopulationGroups"    ] = "PopulationGroups";
+        string_table[ "ResultUnits"         ] = "ResultUnits";
+        string_table[ "ResultScaleFactor"   ] = "ResultScaleFactor";
+        string_table[ "ResultValues"        ] = "ResultValues";
+        string_table[ "DistributionValues"  ] = "DistributionValues";
+
+        INodeContextFake parent;
+
+        unique_ptr<NodeDemographics> p_nd( NodeDemographicsFactory::CreateNodeDemographics( dist_json, &string_table, &parent, 1, "AgeDistribution", "" ) );
+
+        unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd, "gender", "age" ) );
+
+        CHECK_CLOSE(   60.200001 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   0.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   60.200001 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   0.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   60.200001 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   1.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   40.062500 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   2.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    6.500000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   5.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    4.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,   7.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    1.500000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  10.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    0.850000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  15.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    0.200000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  20.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    0.600000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  25.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    1.050000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  35.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    2.950000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  45.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    6.750000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  55.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   10.650000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  65.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   27.166668 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  75.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   56.300003 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  85.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   85.433334 / 365.0 / 1000.0, p_dist->DrawResultValue( 0,  95.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  325.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0, 105.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE( 1000.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 0, 125.0 * 365.0 ), 0.000001 );
+
+        CHECK_CLOSE(   67.199997 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   0.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   67.199997 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   0.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   67.199997 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   1.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   44.812500 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   2.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    7.500000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   5.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    5.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,   7.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    2.500000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  10.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    1.850000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  15.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    1.200000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  20.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    1.600000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  25.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    2.050000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  35.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    3.950000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  45.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(    7.750000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  55.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   11.650000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  65.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   28.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  75.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   56.800003 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  85.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(   85.599998 / 365.0 / 1000.0, p_dist->DrawResultValue( 1,  95.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  325.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1, 105.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE( 1000.000000 / 365.0 / 1000.0, p_dist->DrawResultValue( 1, 125.0 * 365.0 ), 0.000001 );
+
+        int population = 1000;
+        PSEUDO_DES rng( 42 );
+        for( float age = 5.0; age <= 100.0; age += 5.0 )
+        {
+            int num_died = 0;
+            for( int p = 0; p < population; ++p )
+            {
+                bool died = false;
+                for( int d = 0; !died && (d < 365); ++d )
+                {
+                    float prob = p_dist->DrawResultValue( 0, age * 365.0 );
+                    if( rng.SmartDraw( prob ) )
+                    {
+                        num_died++;
+                        died = true;
+                    }
+                }
+            }
+            printf( "age=%f  num_died=%d  percent_died=%f\n", age, num_died, float(num_died)/float(population) );
+        }
+    }
+
+    TEST( TestMortalityDistributionMaleFemale )
+    {
+        std::string dist_str = "";
+        dist_str += "{\n";
+        dist_str += "    \"AxisNames\": [ \"age\", \"year\" ],\n";
+        dist_str += "    \"AxisScaleFactors\": [ 365, 1 ],\n";
+        dist_str += "    \"PopulationGroups\": \n";
+        dist_str += "    [\n";
+        dist_str += "        [ 0, 10, 20, 50, 100 ],\n";
+        dist_str += "        [ 1950, 1970, 1990 ]\n";
+        dist_str += "    ],\n";
+        dist_str += "    \"ResultScaleFactor\": 2.739726027397e-06,\n";
+        //dist_str += "     \"ResultScaleFactor\": 1.0,\n";
+        dist_str += "    \"ResultValues\": \n";
+        dist_str += "    [\n";
+        dist_str += "        [ 100.0,  75.0,  50.0 ],\n";
+        dist_str += "        [  10.0,   5.0,   1.0 ],\n";
+        dist_str += "        [   5.0,   3.0,   1.0 ],\n";
+        dist_str += "        [  30.0,  20.0,  10.0 ],\n";
+        dist_str += "        [ 300.0, 250.0, 200.0 ]\n";
+        dist_str += "    ]\n";
+        dist_str += "}\n";
+        printf( "%s\n", dist_str.c_str() );
+
+        JsonObjectDemog dist_json;
+        dist_json.Parse( dist_str.c_str() );
+
+        std::map<std::string, std::string> string_table;
+        string_table[ "NumDistributionAxes" ] = "NumDistributionAxes";
+        string_table[ "AxisNames"           ] = "AxisNames";
+        string_table[ "AxisUnits"           ] = "AxisUnits";
+        string_table[ "AxisScaleFactors"    ] = "AxisScaleFactors";
+        string_table[ "NumPopulationGroups" ] = "NumPopulationGroups";
+        string_table[ "PopulationGroups"    ] = "PopulationGroups";
+        string_table[ "ResultUnits"         ] = "ResultUnits";
+        string_table[ "ResultScaleFactor"   ] = "ResultScaleFactor";
+        string_table[ "ResultValues"        ] = "ResultValues";
+        string_table[ "DistributionValues"  ] = "DistributionValues";
+
+        INodeContextFake parent;
+
+        unique_ptr<NodeDemographics> p_nd( NodeDemographicsFactory::CreateNodeDemographics( dist_json, &string_table, &parent, 1, "AgeDistribution", "" ) );
+
+        unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd, "age", "year" ) );
+
+        CHECK_CLOSE( 100.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1900.0 ), 0.000001 );
+        CHECK_CLOSE( 100.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(  75.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(  50.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1990.0 ), 0.000001 );
+        CHECK_CLOSE(  50.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 2000.0 ), 0.000001 );
+
+        CHECK_CLOSE( 100.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 0.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(  75.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 0.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(  50.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 0.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE(  87.5 / 365.0 / 1000.0, p_dist->DrawResultValue( 0.0 * 365.0, 1960.0 ), 0.000001 );
+        CHECK_CLOSE(  62.5 / 365.0 / 1000.0, p_dist->DrawResultValue( 0.0 * 365.0, 1980.0 ), 0.000001 );
+
+        CHECK_CLOSE(  55.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 5.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(  40.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 5.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(  25.5 / 365.0 / 1000.0, p_dist->DrawResultValue( 5.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE(  47.50 / 365.0 / 1000.0, p_dist->DrawResultValue( 5.0 * 365.0, 1960.0 ), 0.000001 );
+        CHECK_CLOSE(  32.75 / 365.0 / 1000.0, p_dist->DrawResultValue( 5.0 * 365.0, 1980.0 ), 0.000001 );
+
+        CHECK_CLOSE(  10.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 10.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(   5.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 10.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(   1.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 10.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE(   7.5 / 365.0 / 1000.0, p_dist->DrawResultValue( 10.0 * 365.0, 1960.0 ), 0.000001 );
+        CHECK_CLOSE(   3.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 10.0 * 365.0, 1980.0 ), 0.000001 );
+
+        CHECK_CLOSE(   5.75 / 365.0 / 1000.0, p_dist->DrawResultValue( 15.0 * 365.0, 1960.0 ), 0.000001 );
+        CHECK_CLOSE(   2.50 / 365.0 / 1000.0, p_dist->DrawResultValue( 15.0 * 365.0, 1980.0 ), 0.000001 );
+
+        CHECK_CLOSE(   5.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 20.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(   3.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 20.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(   1.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 20.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE(  30.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 50.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE(  20.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 50.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE(  10.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 50.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE( 300.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 100.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE( 250.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 100.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE( 200.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 100.0 * 365.0, 1990.0 ), 0.000001 );
+
+        CHECK_CLOSE( 300.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 120.0 * 365.0, 1900.0 ), 0.000001 );
+        CHECK_CLOSE( 300.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 120.0 * 365.0, 1950.0 ), 0.000001 );
+        CHECK_CLOSE( 250.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 120.0 * 365.0, 1970.0 ), 0.000001 );
+        CHECK_CLOSE( 200.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 120.0 * 365.0, 1990.0 ), 0.000001 );
+        CHECK_CLOSE( 200.0 / 365.0 / 1000.0, p_dist->DrawResultValue( 120.0 * 365.0, 2000.0 ), 0.000001 );
+    }
+
+    TEST(TestSusceptibilityDistribution)
+    {
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        // !!! Only applies to GENERIC_SIM,VECTOR_SIM,STI_SIM
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        std::string dist_str = "" ;
+        dist_str += "{";
+        dist_str += "     \"ResultScaleFactor\": 1,";
+        dist_str += "     \"DistributionValues\" : [    0, 1825, 3650, 5475, 7300, 43800 ],";
+        dist_str += "     \"ResultValues\"       : [ 0.90, 0.95, 0.50, 0.20, 0.70,     1 ] "; // weird to show not sorted
+        dist_str += "}";
+
+        JsonObjectDemog dist_json;
+        dist_json.Parse( dist_str.c_str() );
+
+        std::map<std::string, std::string> string_table ;
+        string_table["NumDistributionAxes"] = "NumDistributionAxes" ;
+        string_table["AxisNames"          ] = "AxisNames" ;
+        string_table["AxisUnits"          ] = "AxisUnits" ;
+        string_table["AxisScaleFactors"   ] = "AxisScaleFactors" ;
+        string_table["NumPopulationGroups"] = "NumPopulationGroups" ;
+        string_table["PopulationGroups"   ] = "PopulationGroups" ;
+        string_table["ResultUnits"        ] = "ResultUnits" ;
+        string_table["ResultScaleFactor"  ] = "ResultScaleFactor" ;
+        string_table["ResultValues"       ] = "ResultValues" ;
+        string_table["DistributionValues" ] = "DistributionValues" ;
+
+        INodeContextFake parent ;
+
+        unique_ptr<NodeDemographics> p_nd( NodeDemographicsFactory::CreateNodeDemographics( dist_json, &string_table, &parent, 1, "AgeDistribution", "") );
+
+        unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd ));
+
+        CHECK_CLOSE(  0.900, p_dist->DrawFromDistribution(   0.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.925, p_dist->DrawFromDistribution(   2.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.950, p_dist->DrawFromDistribution(   5.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.725, p_dist->DrawFromDistribution(   7.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.500, p_dist->DrawFromDistribution(  10.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.350, p_dist->DrawFromDistribution(  12.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.200, p_dist->DrawFromDistribution(  15.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.450, p_dist->DrawFromDistribution(  17.5 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.700, p_dist->DrawFromDistribution(  20.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  0.850, p_dist->DrawFromDistribution(  70.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  1.000, p_dist->DrawFromDistribution( 120.0 * 365.0 ), 0.000001 );
+        CHECK_CLOSE(  1.000, p_dist->DrawFromDistribution( 150.0 * 365.0 ), 0.000001 );
+    }
 #endif //INCLUDED
 
     TEST(TestDistFake)
