@@ -1527,6 +1527,10 @@ SUITE(NodeDemographicsTest)
 
         unique_ptr<NodeDemographicsDistribution> p_dist( NodeDemographicsDistribution::CreateDistribution( *p_nd, "age", "year" ) );
 
+        CHECK_CLOSE( ( 5.0 + (1955.0 - 1950.0)*(( 3.0 -  5.0)/(1970.0 - 1950.0))) / 365.0 / 1000.0, p_dist->DrawResultValue( 20 * 365.0, 1955.0 ), 0.000001 ); //  4.5
+        CHECK_CLOSE( (30.0 + (1955.0 - 1950.0)*((20.0 - 30.0)/(1970.0 - 1950.0))) / 365.0 / 1000.0, p_dist->DrawResultValue( 50 * 365.0, 1955.0 ), 0.000001 ); // 27.5
+        CHECK_CLOSE( ( 4.5 + (  25.0 -   20.0)*((27.5 -  4.5)/(  50.0 -   20.0))) / 365.0 / 1000.0, p_dist->DrawResultValue( 25 * 365.0, 1955.0 ), 0.000001 ); // 8.33333
+
         CHECK_CLOSE( 100.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1900.0 ), 0.000001 );
         CHECK_CLOSE( 100.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1950.0 ), 0.000001 );
         CHECK_CLOSE(  75.0 / 365.0 / 1000.0, p_dist->DrawResultValue( -1.0 * 365.0, 1970.0 ), 0.000001 );
