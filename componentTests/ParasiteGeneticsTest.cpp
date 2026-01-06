@@ -199,19 +199,27 @@ SUITE( ParasiteGeneticsTest )
 
         ParasiteGenetics::CreateInstance()->Configure( EnvPtr->Config );
 
-        for( int x = 16; x < 17; ++x )
+        bool should_exit = false;
+        int num_bad = 0;
+
+        int num_infs = 100;
+        int num_pos = ParasiteGenetics::GetInstance()->GetNumBasePairs();
+        uint64_t num_samples = 10000000;
+        int num_sims = 365*100;
+
+        std::stringstream ss;
+        ss << "tmp_" << num_pos << "x" << num_infs << ".txt";
+
+        for( int sim = 0; sim < num_sims; ++sim )
         {
             ParasiteGenetics::CreateInstance()->ReduceGenomeMap();
-            int num_bad = 0;
-            int num_pos = ParasiteGenetics::GetInstance()->GetNumBasePairs();
-            int num_samples = 1000000;
-            for( int i_sample = 0; i_sample < num_samples; ++i_sample )
+            for( uint64_t i_sample = 0; (i_sample < num_samples) && !should_exit; ++i_sample )
             {
                 std::vector<int32_t> roots( num_pos, 0 );
                 std::string barcode = "";
                 for( int i_pos = 0; i_pos < num_pos; ++i_pos )
                 {
-                    if( rng.SmartDraw( 0.0f ) )
+                    if( rng.SmartDraw( 0.5f ) )
                     {
                         barcode += "A";
                     }
@@ -219,11 +227,8 @@ SUITE( ParasiteGeneticsTest )
                     {
                         barcode += "C";
                     }
-                    if( i_pos < x )
-                    {
-                        uint16_t root16 = rng.uniformZeroToN16( 2 );
-                        roots[ i_pos ] = int32_t( root16 );
-                    }
+                    uint16_t root16 = rng.uniformZeroToN16( num_infs );
+                    roots[ i_pos ] = int32_t( root16 );
                 }
                 ParasiteGenomeInner* p_inner = ParasiteGenetics::GetInstance()->TEST_CreateGenomeInner( barcode, roots );
 
@@ -236,14 +241,25 @@ SUITE( ParasiteGeneticsTest )
                 {
                     ParasiteGenome genome = ParasiteGenome::TEST_CreateGenome( p_inner, false );
                 }
-                if( (i_sample + 1) == num_samples )
+                if( i_sample%100000 == 0 )
                 {
+                    FILE* f = nullptr;
+                    errno = 0;
+                    if( fopen_s( &f, ss.str().c_str(), "a") != 0 )
+                    {
+                        CHECK( false );
+                    }
                     MemoryGauge mem;
-                    printf( "num genomes in map=%d  num_bad=%d  ram=%d\n", ParasiteGenetics::GetInstance()->GetGenomeMapSize(), num_bad, mem.GetProcessMemory().currentMB );
+                    uint32_t current_mb = mem.GetProcessMemory().currentMB;
+                    fprintf( f, "sim=%d isample=%zd map=%zd  num_bad=%d  ram=%d\n",
+                            sim, i_sample, ParasiteGenetics::GetInstance()->GetGenomeMapSize(), num_bad, current_mb );
+                    printf("sim=%d isample=%zd map=%zd  num_bad=%d  ram=%d\n",
+                            sim, i_sample, ParasiteGenetics::GetInstance()->GetGenomeMapSize(), num_bad, current_mb );
+                    fclose( f );
+                    should_exit = current_mb > 50000;
                 }
+                CHECK_EQUAL( 0, num_bad );
             }
-            CHECK_EQUAL( 0, num_bad );
-            CHECK_EQUAL( int(pow(2,x)), ParasiteGenetics::GetInstance()->GetGenomeMapSize() );
         }
     }
 

@@ -1303,7 +1303,7 @@ namespace Kernel
         //m_HashToGenomeID.clear();
     }
 
-    uint32_t ParasiteGenetics::GetGenomeMapSize() const
+    uint64_t ParasiteGenetics::GetGenomeMapSize() const
     {
         return m_ParasiteGenomeMap.size();
     }

@@ -119,7 +119,7 @@ namespace Kernel
         void ReduceGenomeMap();
         void ClearGenomeMap();
         bool CheckHashcodes( ParasiteGenomeInner* pInner ) const;
-        uint32_t GetGenomeMapSize() const;
+        uint64_t GetGenomeMapSize() const;
 
         static int32_t ConvertCharToVal( const std::string& rParameterName, bool isReportParameter, char c );
 
