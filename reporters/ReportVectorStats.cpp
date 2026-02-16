@@ -32,6 +32,7 @@ namespace Kernel
         , m_IncludeGestation( false )
         , m_IncludeDeathByState( false )
         , state_counts()
+        , state_cohort_counts()
         , death_counts()
         , sum_age_at_death()
         , num_gestating_queue(8,0)
@@ -62,6 +63,7 @@ namespace Kernel
         for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
         {
             state_counts.push_back( 0 );
+            state_cohort_counts.push_back( 0 );
             death_counts.push_back( 0 );
             sum_age_at_death.push_back( 0.0 );
             microsporidia_counts_by_state.push_back( 0 );
@@ -101,6 +103,7 @@ namespace Kernel
         for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
         {
             state_counts[ i ] = 0;
+            state_cohort_counts[ i ] = 0;
             death_counts[ i ] = 0;
             sum_age_at_death[ i ] = 0.0f;
             microsporidia_counts_by_state[ i ] = 0;
@@ -155,6 +158,7 @@ namespace Kernel
         for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
         {
             state_counts[ i ] += vp->getCount( VectorStateEnum::Enum( i ) );
+            state_cohort_counts[ i ] += vp->getCohortCount( VectorStateEnum::Enum( i ) );
         }
 
         if( m_IncludeDeathByState )
@@ -234,6 +238,10 @@ namespace Kernel
         for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
         {
             header << "," << VectorStateEnum::pairs::get_keys()[ i ];
+        }
+        for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
+        {
+            header << ",Cohorts_" << VectorStateEnum::pairs::get_keys()[ i ];
         }
         if( m_IncludeGestation )
         {
@@ -334,6 +342,10 @@ namespace Kernel
         for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
         {
             output << "," << state_counts[ i ];
+        }
+        for( int i = 0; i < VectorStateEnum::pairs::count(); ++i )
+        {
+            output << "," << state_cohort_counts[ i ];
         }
         if( m_IncludeGestation )
         {

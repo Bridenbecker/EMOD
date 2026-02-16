@@ -3001,6 +3001,54 @@ namespace Kernel
         return state_counts[ state ];
     }
 
+    uint32_t VectorPopulation::getCohortCount( VectorStateEnum::Enum state ) const
+    {
+        switch( state )
+        {
+            case VectorStateEnum::STATE_EGG:
+            {
+                int size = 0;
+                for( auto& r_map : m_EggCohortVectorOfMaps )
+                {
+                    for( auto& r_entry : r_map )
+                    {
+                        if( (r_entry.second != nullptr) && (r_entry.second->GetPopulation() > 0) )
+                        {
+                            ++size;
+                        }
+                    }
+
+                }
+                return size;
+            }
+            case VectorStateEnum::STATE_LARVA:
+                return LarvaQueues.size();
+            case VectorStateEnum::STATE_IMMATURE:
+                return ImmatureQueues.size();
+            case VectorStateEnum::STATE_MALE:
+            //{
+            //    printf("%zd ---- \n",MaleQueues.size());
+            //    int index = 0;
+            //    for( auto p_cohort : MaleQueues )
+            //    {
+            //        printf("%d-%d-%f\n",index,p_cohort->GetPopulation(),p_cohort->GetAge());
+            //        ++index;
+            //    }
+            //    printf("\n");
+            //}
+                return MaleQueues.size();
+            case VectorStateEnum::STATE_ADULT:
+                return pAdultQueues->size();
+            case VectorStateEnum::STATE_INFECTED:
+                return InfectedQueues.size();
+            case VectorStateEnum::STATE_INFECTIOUS:
+                return InfectiousQueues.size();
+            default:
+                release_assert( false );
+                return 0;
+        }
+    }
+
     uint32_t VectorPopulation::getNumInfsCount( VectorStateEnum::Enum state ) const
     {
         return num_infs_per_state_counts[ state ];

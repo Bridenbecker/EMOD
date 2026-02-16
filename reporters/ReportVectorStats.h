@@ -56,6 +56,7 @@ namespace Kernel
         bool m_IncludeGestation;
         bool m_IncludeDeathByState;
         std::vector<uint32_t> state_counts;
+        std::vector<uint32_t> state_cohort_counts;
         std::vector<uint32_t> death_counts;
         std::vector<float> sum_age_at_death;
         std::vector<uint32_t> num_gestating_queue;

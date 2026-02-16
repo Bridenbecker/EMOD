@@ -85,6 +85,7 @@ namespace Kernel
         virtual float  GetEIRByPool(VectorPoolIdEnum::Enum pool_id)           const override;
         virtual float  GetHBRByPool(VectorPoolIdEnum::Enum pool_id)           const override;
         virtual uint32_t getCount( VectorStateEnum::Enum state )              const override;
+        virtual uint32_t getCohortCount( VectorStateEnum::Enum state )        const override;
         virtual uint32_t getNumInfsCount( VectorStateEnum::Enum state )       const override;
         virtual uint32_t getInfectedCount(   IStrainIdentity* pStrain )       const override;
         virtual uint32_t getInfectiousCount( IStrainIdentity* pStrain )       const override;
